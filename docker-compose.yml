@@ -1,0 +1,61 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:18-alpine AS deps
+        RUN apk add --no-cache libc6-compat
+        WORKDIR /app
+        COPY package.json package-lock.json ./
+        RUN npm ci
+
+        FROM node:18-alpine AS builder
+        WORKDIR /app
+        COPY --from=deps /app/node_modules ./node_modules
+        COPY . .
+        ENV NEXT_TELEMETRY_DISABLED=1
+        RUN npm run build
+
+        FROM node:18-alpine
+        WORKDIR /app
+        ENV NODE_ENV=production
+        ENV NEXT_TELEMETRY_DISABLED=1
+        RUN addgroup --system --gid 1001 nodejs
+        RUN adduser --system --uid 1001 nextjs
+        COPY --from=builder /app/public ./public
+        RUN mkdir -p /app/public/invoices && chown -R nextjs:nodejs /app/public/invoices
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+        COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+        USER nextjs
+        EXPOSE 3000
+        ENV PORT=3000
+        ENV HOSTNAME="0.0.0.0"
+        CMD ["node", "server.js"]
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/invoice-generator
+      - INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
+      - NODE_ENV=production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - invoices_data:/app/public/invoices
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  invoices_data:
