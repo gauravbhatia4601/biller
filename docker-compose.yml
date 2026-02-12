@@ -61,10 +61,7 @@ services:
       - PORT=${PORT:-3000}
       # Optional: Company details (with defaults from config.js)
       - COMPANY_NAME=${COMPANY_NAME:-Technioz}
-      - COMPANY_TAGLINE=${COMPANY_TAGLINE:-Innovative Solutions Seamless Integration}
-      - COMPANY_PHONE=${COMPANY_PHONE:-"+91 9803683577"}
       - COMPANY_EMAIL=${COMPANY_EMAIL:-info@technioz.com}
-      - COMPANY_ADDRESS=${COMPANY_ADDRESS:-"Jalandhar, Punjab"}
       - COMPANY_CITY=${COMPANY_CITY:-Jalandhar}
       - COMPANY_COUNTRY=${COMPANY_COUNTRY:-India}
       - COMPANY_VAT_ID=${COMPANY_VAT_ID:-}
