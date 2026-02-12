@@ -14,6 +14,29 @@ services:
         COPY --from=deps /app/node_modules ./node_modules
         COPY . .
         ENV NEXT_TELEMETRY_DISABLED=1
+        # Set build-time environment variables (use defaults if not provided)
+        ARG MONGODB_URI
+        ARG INVOICE_GENERATOR_API_KEY
+        ARG COMPANY_NAME
+        ARG COMPANY_TAGLINE
+        ARG COMPANY_LOGO_URL
+        ARG COMPANY_PHONE
+        ARG COMPANY_EMAIL
+        ARG COMPANY_ADDRESS
+        ARG COMPANY_CITY
+        ARG COMPANY_COUNTRY
+        ARG COMPANY_VAT_ID
+        ENV MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/invoice-generator}
+        ENV INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
+        ENV COMPANY_NAME=${COMPANY_NAME:-Technioz}
+        ENV COMPANY_TAGLINE=${COMPANY_TAGLINE:-Innovative Solutions Seamless Integration}
+        ENV COMPANY_LOGO_URL=${COMPANY_LOGO_URL:-logo.png}
+        ENV COMPANY_PHONE=${COMPANY_PHONE:-+91 9803683577}
+        ENV COMPANY_EMAIL=${COMPANY_EMAIL:-info@technioz.com}
+        ENV COMPANY_ADDRESS=${COMPANY_ADDRESS:-Jalandhar, Punjab}
+        ENV COMPANY_CITY=${COMPANY_CITY:-Jalandhar}
+        ENV COMPANY_COUNTRY=${COMPANY_COUNTRY:-India}
+        ENV COMPANY_VAT_ID=${COMPANY_VAT_ID:-}
         RUN npm run build
 
         FROM node:18-alpine
