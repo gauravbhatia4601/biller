@@ -4,17 +4,25 @@ import { assertAuthEnv } from '@/lib/auth/env'
 import { getCurrentSession } from '@/lib/auth/session'
 import { getAuthState } from '@/lib/auth/state'
 import { getWebAuthnConfig } from '@/lib/auth/webauthn'
+import { authErrorPayload, authLog } from '@/lib/auth/debug'
 
 export async function POST() {
   try {
+    authLog('register.options.start')
     assertAuthEnv()
     const session = await getCurrentSession()
     if (!session) {
+      authLog('register.options.unauthorized')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const authState: any = await getAuthState()
     const webAuthnConfig = getWebAuthnConfig()
+    authLog('register.options.config', {
+      rpID: webAuthnConfig.rpID,
+      origin: webAuthnConfig.origin,
+      existingCredentialCount: (authState.webAuthnCredentials || []).length,
+    })
 
     const options = await generateRegistrationOptions({
       rpName: webAuthnConfig.rpName,
@@ -41,12 +49,13 @@ export async function POST() {
       },
     })
 
+    authLog('register.options.success')
     return NextResponse.json(options)
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate registration options' },
-      { status: 500 }
-    )
+    authLog('register.options.error', { message: error?.message || 'unknown error' })
+    return NextResponse.json(authErrorPayload(error, 'Failed to generate registration options'), {
+      status: 500,
+    })
   }
 }
 

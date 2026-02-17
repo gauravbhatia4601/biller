@@ -23,6 +23,7 @@ services:
         ARG AUTH_WEBAUTHN_RP_ID
         ARG AUTH_WEBAUTHN_ORIGIN
         ARG AUTH_WEBAUTHN_RP_NAME
+        ARG AUTH_DEBUG
         ENV MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/invoice-generator}
         ENV INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
         ENV AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
@@ -31,6 +32,7 @@ services:
         ENV AUTH_WEBAUTHN_RP_ID=${AUTH_WEBAUTHN_RP_ID}
         ENV AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
         ENV AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
+        ENV AUTH_DEBUG=${AUTH_DEBUG:-false}
         RUN npm run build
 
         FROM node:18-alpine
@@ -61,6 +63,7 @@ services:
       - AUTH_WEBAUTHN_RP_ID=${AUTH_WEBAUTHN_RP_ID}
       - AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
       - AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
+      - AUTH_DEBUG=${AUTH_DEBUG:-false}
     depends_on:
       mongo:
         condition: service_healthy

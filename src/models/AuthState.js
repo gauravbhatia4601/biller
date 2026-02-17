@@ -3,11 +3,14 @@ import mongoose from 'mongoose'
 const webAuthnCredentialSchema = new mongoose.Schema(
   {
     credentialID: { type: String, required: true },
+    label: { type: String, default: '' },
     credentialPublicKey: { type: String, required: true },
     counter: { type: Number, default: 0 },
     transports: [{ type: String }],
     deviceType: { type: String, default: 'singleDevice' },
     backedUp: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+    lastUsedAt: { type: Date, default: null },
   },
   { _id: false }
 )

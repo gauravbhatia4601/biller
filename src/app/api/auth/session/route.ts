@@ -3,16 +3,17 @@ import { getCurrentSession } from '@/lib/auth/session'
 import { getAuthState } from '@/lib/auth/state'
 
 export async function GET() {
+  const authState: any = await getAuthState()
+  const hasBiometric = (authState.webAuthnCredentials || []).length > 0
   const session = await getCurrentSession()
   if (!session) {
-    return NextResponse.json({ authenticated: false, methods: [], hasBiometric: false })
+    return NextResponse.json({ authenticated: false, methods: [], hasBiometric })
   }
 
-  const authState: any = await getAuthState()
   return NextResponse.json({
     authenticated: true,
     methods: session.methods,
-    hasBiometric: (authState.webAuthnCredentials || []).length > 0,
+    hasBiometric,
   })
 }
 
