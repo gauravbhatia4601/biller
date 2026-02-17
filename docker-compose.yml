@@ -36,8 +36,8 @@ services:
         ENV PORT=3000
         ENV HOSTNAME="0.0.0.0"
         CMD ["node", "server.js"]
-    ports:
-      - "${PORT:-3000}:3000"
+    expose:
+      - "3000"
     environment:
       - MONGODB_URI=${MONGODB_URI}
       - INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
