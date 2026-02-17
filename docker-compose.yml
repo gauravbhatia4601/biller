@@ -17,8 +17,20 @@ services:
         # Set build-time environment variables (use defaults if not provided)
         ARG MONGODB_URI
         ARG INVOICE_GENERATOR_API_KEY
+        ARG AUTH_SESSION_SECRET
+        ARG AUTH_PIN_SALT
+        ARG AUTH_PIN_HASH
+        ARG AUTH_WEBAUTHN_RP_ID
+        ARG AUTH_WEBAUTHN_ORIGIN
+        ARG AUTH_WEBAUTHN_RP_NAME
         ENV MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/invoice-generator}
         ENV INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
+        ENV AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
+        ENV AUTH_PIN_SALT=${AUTH_PIN_SALT}
+        ENV AUTH_PIN_HASH=${AUTH_PIN_HASH}
+        ENV AUTH_WEBAUTHN_RP_ID=${AUTH_WEBAUTHN_RP_ID}
+        ENV AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
+        ENV AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
         RUN npm run build
 
         FROM node:18-alpine
@@ -43,6 +55,12 @@ services:
       - INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
       - NODE_ENV=production
       - PORT=${PORT:-3000}
+      - AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
+      - AUTH_PIN_SALT=${AUTH_PIN_SALT}
+      - AUTH_PIN_HASH=${AUTH_PIN_HASH}
+      - AUTH_WEBAUTHN_RP_ID=${AUTH_WEBAUTHN_RP_ID}
+      - AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
+      - AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
     depends_on:
       mongo:
         condition: service_healthy
