@@ -6,6 +6,7 @@ import { createSessionToken, setSessionCookie } from '@/lib/auth/session'
 import { getAuthState } from '@/lib/auth/state'
 import { fromBase64Url, getWebAuthnConfig } from '@/lib/auth/webauthn'
 import { authErrorPayload, authLog } from '@/lib/auth/debug'
+import AuthState from '@/models/AuthState'
 
 const getIP = (request: Request) =>
   request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -85,8 +86,11 @@ export async function POST(request: Request) {
     })
 
     if (typeof newCounter === 'number') {
-      await authState.updateOne(
-        { 'webAuthnCredentials.credentialID': storedCredential.credentialID },
+      await AuthState.updateOne(
+        {
+          singletonKey: 'owner',
+          'webAuthnCredentials.credentialID': storedCredential.credentialID,
+        },
         {
           $set: {
             'webAuthnCredentials.$.counter': newCounter,
@@ -95,8 +99,11 @@ export async function POST(request: Request) {
         }
       )
     } else {
-      await authState.updateOne(
-        { 'webAuthnCredentials.credentialID': storedCredential.credentialID },
+      await AuthState.updateOne(
+        {
+          singletonKey: 'owner',
+          'webAuthnCredentials.credentialID': storedCredential.credentialID,
+        },
         {
           $set: {
             'webAuthnCredentials.$.lastUsedAt': new Date(),

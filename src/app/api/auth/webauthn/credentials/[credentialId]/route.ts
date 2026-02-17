@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentSession } from '@/lib/auth/session'
 import { getAuthState } from '@/lib/auth/state'
+import AuthState from '@/models/AuthState'
 
 export async function PATCH(request: Request, { params }: { params: { credentialId: string } }) {
   const session = await getCurrentSession()
@@ -23,9 +24,14 @@ export async function PATCH(request: Request, { params }: { params: { credential
     return NextResponse.json({ error: 'Credential not found' }, { status: 404 })
   }
 
-  await authState.updateOne(
-    { 'webAuthnCredentials.credentialID': credentialID },
-    { $set: { 'webAuthnCredentials.$.label': label } }
+  await AuthState.updateOne(
+    {
+      singletonKey: 'owner',
+      'webAuthnCredentials.credentialID': credentialID,
+    },
+    {
+      $set: { 'webAuthnCredentials.$.label': label },
+    }
   )
 
   return NextResponse.json({ success: true })
@@ -46,11 +52,14 @@ export async function DELETE(_: Request, { params }: { params: { credentialId: s
     return NextResponse.json({ error: 'Credential not found' }, { status: 404 })
   }
 
-  await authState.updateOne({
-    $pull: {
-      webAuthnCredentials: { credentialID },
-    },
-  })
+  await AuthState.updateOne(
+    { singletonKey: 'owner' },
+    {
+      $pull: {
+        webAuthnCredentials: { credentialID },
+      },
+    }
+  )
 
   return NextResponse.json({ success: true })
 }
