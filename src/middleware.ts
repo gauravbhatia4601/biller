@@ -7,6 +7,7 @@ const isPublicPath = (pathname: string) => {
   return (
     pathname === '/login' ||
     pathname.startsWith('/api/auth/') ||
+    pathname === '/api/invoices/recurring/process' ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon') ||
     pathname === '/robots.txt' ||

@@ -24,6 +24,7 @@ services:
         ARG AUTH_WEBAUTHN_ORIGIN
         ARG AUTH_WEBAUTHN_RP_NAME
         ARG AUTH_DEBUG
+        ARG RECURRING_CRON_SECRET
         ENV MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/invoice-generator}
         ENV INVOICE_GENERATOR_API_KEY=${INVOICE_GENERATOR_API_KEY}
         ENV AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}
@@ -33,6 +34,7 @@ services:
         ENV AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
         ENV AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
         ENV AUTH_DEBUG=${AUTH_DEBUG:-false}
+        ENV RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
         RUN npm run build
 
         FROM node:18-alpine
@@ -64,11 +66,27 @@ services:
       - AUTH_WEBAUTHN_ORIGIN=${AUTH_WEBAUTHN_ORIGIN}
       - AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
       - AUTH_DEBUG=${AUTH_DEBUG:-false}
+      - RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
     depends_on:
       mongo:
         condition: service_healthy
     volumes:
       - invoices_data:/app/public/invoices
+    restart: unless-stopped
+
+  recurring-cron:
+    image: alpine:3.20
+    environment:
+      - RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
+      - TZ=${TZ:-UTC}
+    depends_on:
+      - app
+    command: >
+      /bin/sh -c "
+      apk add --no-cache curl tzdata >/dev/null &&
+      echo '0 0 * * * curl -fsS -X POST -H \"x-recurring-cron-secret: '$$RECURRING_CRON_SECRET'\" http://app:3000/api/invoices/recurring/process >/proc/1/fd/1 2>/proc/1/fd/2' > /etc/crontabs/root &&
+      crond -f -l 8
+      "
     restart: unless-stopped
 
   mongo:
