@@ -67,6 +67,16 @@ interface Invoice {
   templateName?: string
   status?: 'unpaid' | 'partial' | 'paid'
   amountPaid?: number
+  recurring?: {
+    enabled: boolean
+    frequency: 'daily' | 'weekly' | 'monthly' | 'every_n_days'
+    intervalDays: number
+    dueInDays: number
+    nextRunDate?: string
+    autoGeneratePdf: boolean
+    lastRunAt?: string | null
+    sourceInvoiceId?: string | null
+  }
 }
 
 interface InvoiceState {

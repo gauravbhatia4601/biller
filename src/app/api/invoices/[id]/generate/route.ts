@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import Invoice from '@/models/Invoice'
-import InvoiceGenerator from '@/services/invoiceGenerator'
-import { InvoiceBuilder } from '@/services/invoiceBuilder'
+import { generatePdfForInvoice } from '@/lib/invoice-pdf'
 import { connectDB } from '@/lib/db'
-import path from 'path'
-import fs from 'fs'
 
 // POST /api/invoices/[id]/generate - Generate PDF
 export async function POST(
@@ -19,32 +16,12 @@ export async function POST(
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
     
-    const apiKey = process.env.INVOICE_GENERATOR_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
+    const result = await generatePdfForInvoice(invoice)
+    if (!result.success) {
+      return NextResponse.json({ error: result.reason }, { status: 500 })
     }
-    
-    const generator = new InvoiceGenerator(apiKey)
-    const builder = new InvoiceBuilder(generator)
-    
-    // Convert invoice to invoice data format
-    const invoiceData = invoice.toObject()
-    
-    // Generate PDF
-    const invoiceFileName = `invoice_${invoice.invoice.number.replace(/\s+/g, '_')}.pdf`
-    const invoiceDir = path.join(process.cwd(), 'public', 'invoices')
-    
-    // Ensure directory exists
-    if (!fs.existsSync(invoiceDir)) {
-      fs.mkdirSync(invoiceDir, { recursive: true })
-    }
-    
-    const outputPath = path.resolve(invoiceDir, invoiceFileName)
-    
-    await builder.generateInvoice(invoiceData, outputPath)
-    
-    // Update invoice with PDF path
-    invoice.pdfPath = `/invoices/${path.basename(outputPath)}`
+
+    invoice.pdfPath = result.pdfPath
     await invoice.save()
     
     // Return PDF URL

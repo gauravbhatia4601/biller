@@ -14,6 +14,11 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
+    const existingInvoice: any = await Invoice.findById(params.id).select('recurring')
+    if (!existingInvoice) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
+
     const updateData: any = { status }
 
     if (status === 'partial') {
@@ -31,16 +36,17 @@ export async function PATCH(
       updateData.amountPaid = 0
     }
 
+    // Generated invoices (children of recurring templates) must stay non-recurring.
+    if (existingInvoice?.recurring?.sourceInvoiceId) {
+      updateData['recurring.enabled'] = false
+    }
+
     const invoice = await Invoice.findByIdAndUpdate(
       params.id,
       updateData,
       { new: true }
     )
-    
-    if (!invoice) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
-    }
-    
+
     return NextResponse.json({ success: true, status: invoice.status, amountPaid: invoice.amountPaid })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

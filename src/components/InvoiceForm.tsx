@@ -57,6 +57,13 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
     notes: '',
     terms: '',
     status: 'unpaid' as 'unpaid' | 'partial' | 'paid',
+    recurring: {
+      enabled: false,
+      frequency: 'monthly' as 'daily' | 'weekly' | 'monthly' | 'every_n_days',
+      intervalDays: 4,
+      dueInDays: 14,
+      autoGeneratePdf: true,
+    },
   })
 
   useEffect(() => {
@@ -124,6 +131,13 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
         notes: currentInvoice.notes || '',
         terms: currentInvoice.terms || '',
         status: currentInvoice.status || 'unpaid',
+        recurring: {
+          enabled: currentInvoice.recurring?.enabled || false,
+          frequency: currentInvoice.recurring?.frequency || 'monthly',
+          intervalDays: currentInvoice.recurring?.intervalDays || 4,
+          dueInDays: currentInvoice.recurring?.dueInDays || 14,
+          autoGeneratePdf: currentInvoice.recurring?.autoGeneratePdf !== false,
+        },
       })
     } else if (!invoiceId) {
       const currentYear = new Date().getFullYear()
@@ -353,6 +367,93 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
               )}
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Recurring Schedule */}
+      <Card>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Recurring (Optional)</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="recurring-enabled" className="block mb-1 text-xs font-medium text-gray-700">
+              Enable Recurring
+            </label>
+            <Select
+              id="recurring-enabled"
+              sizing="sm"
+              value={formData.recurring.enabled ? 'true' : 'false'}
+              onChange={(e) => handleChange('recurring', 'enabled', e.target.value === 'true')}
+            >
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="recurring-frequency" className="block mb-1 text-xs font-medium text-gray-700">
+              Frequency
+            </label>
+            <Select
+              id="recurring-frequency"
+              sizing="sm"
+              value={formData.recurring.frequency}
+              disabled={!formData.recurring.enabled}
+              onChange={(e) =>
+                handleChange(
+                  'recurring',
+                  'frequency',
+                  e.target.value as 'daily' | 'weekly' | 'monthly' | 'every_n_days'
+                )
+              }
+            >
+              <option value="daily">Every day</option>
+              <option value="weekly">Every week</option>
+              <option value="monthly">Every month</option>
+              <option value="every_n_days">Every N days</option>
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="recurring-intervalDays" className="block mb-1 text-xs font-medium text-gray-700">
+              Every N Days
+            </label>
+            <TextInput
+              id="recurring-intervalDays"
+              sizing="sm"
+              type="number"
+              min={1}
+              value={formData.recurring.intervalDays}
+              disabled={!formData.recurring.enabled || formData.recurring.frequency !== 'every_n_days'}
+              onChange={(e) => handleChange('recurring', 'intervalDays', Math.max(1, parseInt(e.target.value, 10) || 1))}
+            />
+          </div>
+          <div>
+            <label htmlFor="recurring-dueInDays" className="block mb-1 text-xs font-medium text-gray-700">
+              Due In (Days)
+            </label>
+            <TextInput
+              id="recurring-dueInDays"
+              sizing="sm"
+              type="number"
+              min={0}
+              value={formData.recurring.dueInDays}
+              disabled={!formData.recurring.enabled}
+              onChange={(e) => handleChange('recurring', 'dueInDays', Math.max(0, parseInt(e.target.value, 10) || 0))}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label htmlFor="recurring-autoPdf" className="block mb-1 text-xs font-medium text-gray-700">
+              Auto Generate PDF
+            </label>
+            <Select
+              id="recurring-autoPdf"
+              sizing="sm"
+              value={formData.recurring.autoGeneratePdf ? 'true' : 'false'}
+              disabled={!formData.recurring.enabled}
+              onChange={(e) => handleChange('recurring', 'autoGeneratePdf', e.target.value === 'true')}
+            >
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </Select>
+          </div>
         </div>
       </Card>
 

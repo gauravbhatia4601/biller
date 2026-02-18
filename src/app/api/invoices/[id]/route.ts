@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
 import { config } from '@/config/config'
+import { normalizeRecurringConfig } from '@/lib/recurring-invoices'
 
 // GET /api/invoices/[id] - Get single invoice
 export async function GET(
@@ -38,6 +39,11 @@ export async function PUT(
         ...config.company,
         ...(body.company || {}),
       },
+      recurring: normalizeRecurringConfig(
+        body.recurring || {},
+        body.invoice?.date,
+        body.invoice?.dueDate
+      ),
     }
     
     // Merge with default account details if not provided

@@ -134,6 +134,9 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   {stats.recentInvoices.map((invoice: any) => {
                     const badge = getStatusBadge(invoice.status)
+                    const isRecurringSource = Boolean(invoice.recurring?.enabled)
+                    const isGeneratedFromRecurring =
+                      Boolean(invoice.recurring?.sourceInvoiceId) && !isRecurringSource
                     return (
                       <div
                         key={invoice._id}
@@ -147,6 +150,16 @@ export default function DashboardPage() {
                             >
                               {invoice.invoice.number}
                             </Link>
+                            {isRecurringSource && (
+                              <Badge color="info" className="text-[10px] leading-none">
+                                Recurring
+                              </Badge>
+                            )}
+                            {isGeneratedFromRecurring && (
+                              <Badge color="purple" className="text-[10px] leading-none">
+                                Generated
+                              </Badge>
+                            )}
                             {invoice.pdfPath && (
                               <a
                                 href={invoice.pdfPath}
@@ -168,6 +181,11 @@ export default function DashboardPage() {
                           <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
                             {invoice.invoice.currency} {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
+                          {isRecurringSource && (
+                            <span className="text-xs text-blue-600 whitespace-nowrap">
+                              Next: {invoice.recurring?.nextRunDate || '-'}
+                            </span>
+                          )}
                           {invoice.status === 'partial' && (
                             <span className="text-xs text-amber-600 whitespace-nowrap">
                               Paid: {invoice.invoice.currency} {(invoice.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

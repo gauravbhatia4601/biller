@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
+import { processRecurringInvoices } from '@/lib/recurring-invoices'
 
 // GET /api/invoices/stats/summary - Get invoice statistics
 export async function GET() {
   try {
     await connectDB()
+    await processRecurringInvoices()
     
     const totalInvoices = await Invoice.countDocuments({ isTemplate: false })
     const totalTemplates = await Invoice.countDocuments({ isTemplate: true })
@@ -42,7 +44,9 @@ export async function GET() {
     const recentInvoices = await Invoice.find({ isTemplate: false })
       .sort({ createdAt: -1 })
       .limit(10)
-      .select('invoice.number invoice.date invoice.currency customer.name customer.company items financial createdAt pdfPath status amountPaid')
+      .select(
+        'invoice.number invoice.date invoice.currency customer.name customer.company items financial createdAt pdfPath status amountPaid recurring.enabled recurring.nextRunDate recurring.sourceInvoiceId'
+      )
     
     // Format recent invoices with calculated totals
     const formattedInvoices = recentInvoices.map((invoice: any) => {
@@ -71,6 +75,11 @@ export async function GET() {
         pdfPath: invoice.pdfPath,
         status: invoice.status || 'unpaid',
         amountPaid: invoice.amountPaid || 0,
+        recurring: {
+          enabled: Boolean(invoice?.recurring?.enabled),
+          nextRunDate: invoice?.recurring?.nextRunDate || '',
+          sourceInvoiceId: invoice?.recurring?.sourceInvoiceId || null,
+        },
         createdAt: invoice.createdAt,
       }
     })

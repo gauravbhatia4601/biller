@@ -86,7 +86,21 @@ const invoiceSchema = new mongoose.Schema({
   pdfPath: { type: String, default: '' },
   generatedAt: { type: Date, default: Date.now },
   status: { type: String, enum: ['unpaid', 'partial', 'paid'], default: 'unpaid' },
-  amountPaid: { type: Number, default: 0, min: 0 }
+  amountPaid: { type: Number, default: 0, min: 0 },
+  recurring: {
+    enabled: { type: Boolean, default: false },
+    frequency: {
+      type: String,
+      enum: ['daily', 'weekly', 'monthly', 'every_n_days'],
+      default: 'monthly',
+    },
+    intervalDays: { type: Number, default: 1, min: 1 },
+    dueInDays: { type: Number, default: 14, min: 0 },
+    nextRunDate: { type: String, default: '' }, // YYYY-MM-DD
+    autoGeneratePdf: { type: Boolean, default: true },
+    lastRunAt: { type: Date, default: null },
+    sourceInvoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
+  }
 }, {
   timestamps: true
 });

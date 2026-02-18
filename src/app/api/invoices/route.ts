@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server'
 import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
 import { config } from '@/config/config'
+import { getNextInvoiceNumber } from '@/lib/invoice-number'
+import { normalizeRecurringConfig, processRecurringInvoices } from '@/lib/recurring-invoices'
 
 // GET /api/invoices - Get all invoices
 export async function GET() {
   try {
     await connectDB()
+    await processRecurringInvoices()
     const invoices = await Invoice.find().sort({ createdAt: -1 })
     return NextResponse.json(invoices)
   } catch (error: any) {
@@ -23,26 +26,7 @@ export async function POST(request: Request) {
     // Generate invoice number if not provided
     let invoiceNumber = body.invoice?.number
     if (!invoiceNumber || invoiceNumber.trim() === '') {
-      const currentYear = new Date().getFullYear()
-      const yearPrefix = `INV-${currentYear}-`
-      
-      // Find the highest invoice number for this year
-      const lastInvoice = await Invoice.findOne({
-        'invoice.number': { $regex: `^${yearPrefix}` }
-      })
-      .sort({ 'invoice.number': -1 })
-      .select('invoice.number')
-      
-      let nextNumber = 1
-      if (lastInvoice && lastInvoice.invoice?.number) {
-        // Extract the number part (e.g., "INV-2026-003" -> 3)
-        const match = lastInvoice.invoice.number.match(/-(\d+)$/)
-        if (match) {
-          nextNumber = parseInt(match[1], 10) + 1
-        }
-      }
-      
-      invoiceNumber = `${yearPrefix}${nextNumber.toString().padStart(3, '0')}`
+      invoiceNumber = await getNextInvoiceNumber()
     }
     
     // Merge with default company data
@@ -57,6 +41,11 @@ export async function POST(request: Request) {
         number: invoiceNumber,
       },
       status: body.status || 'unpaid',
+      recurring: normalizeRecurringConfig(
+        body.recurring || {},
+        body.invoice?.date,
+        body.invoice?.dueDate
+      ),
     }
     
     // Merge with default account details if not provided

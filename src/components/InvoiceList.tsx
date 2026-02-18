@@ -101,6 +101,7 @@ export default function InvoiceList() {
             <TableHeadCell>Date</TableHeadCell>
             <TableHeadCell>Amount</TableHeadCell>
             <TableHeadCell>Paid</TableHeadCell>
+            <TableHeadCell>Schedule</TableHeadCell>
             <TableHeadCell>Status</TableHeadCell>
             <TableHeadCell>Actions</TableHeadCell>
           </TableHead>
@@ -111,10 +112,24 @@ export default function InvoiceList() {
                 0
               )
               const badge = getStatusBadge(invoice.status || 'unpaid')
+              const isRecurringSource = Boolean(invoice.recurring?.enabled)
+              const isGeneratedFromRecurring = Boolean(invoice.recurring?.sourceInvoiceId) && !isRecurringSource
               return (
                 <TableRow key={invoice._id} className="bg-white">
                   <TableCell className="font-medium text-gray-900">
-                    {invoice.invoice.number}
+                    <div className="flex flex-col gap-1">
+                      <span>{invoice.invoice.number}</span>
+                      {isRecurringSource && (
+                        <Badge color="info" className="w-fit">
+                          Recurring
+                        </Badge>
+                      )}
+                      {isGeneratedFromRecurring && (
+                        <Badge color="purple" className="w-fit">
+                          Generated
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div>
@@ -136,6 +151,15 @@ export default function InvoiceList() {
                     ) : invoice.status === 'paid' ? (
                       <span className="text-green-600 font-medium">
                         {invoice.invoice.currency} {subtotal.toFixed(2)}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {isRecurringSource ? (
+                      <span className="text-blue-700 font-medium">
+                        Next: {invoice.recurring?.nextRunDate || '-'}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
