@@ -28,18 +28,8 @@ const addDays = (date: Date, days: number) => {
   return next
 }
 
-const addMonthsClamped = (date: Date, months: number) => {
-  const year = date.getUTCFullYear()
-  const month = date.getUTCMonth()
-  const day = date.getUTCDate()
-
-  const targetMonthDate = new Date(Date.UTC(year, month + months, 1))
-  const endOfMonth = new Date(
-    Date.UTC(targetMonthDate.getUTCFullYear(), targetMonthDate.getUTCMonth() + 1, 0)
-  ).getUTCDate()
-  targetMonthDate.setUTCDate(Math.min(day, endOfMonth))
-  return targetMonthDate
-}
+const firstDayOfNextMonth = (date: Date) =>
+  new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1))
 
 const nextRunByFrequency = (date: Date, recurring: RecurringConfig) => {
   switch (recurring.frequency) {
@@ -51,7 +41,8 @@ const nextRunByFrequency = (date: Date, recurring: RecurringConfig) => {
       return addDays(date, Math.max(1, recurring.intervalDays || 1))
     case 'monthly':
     default:
-      return addMonthsClamped(date, 1)
+      // Monthly recurring invoices always run on the 1st day of each month.
+      return firstDayOfNextMonth(date)
   }
 }
 
