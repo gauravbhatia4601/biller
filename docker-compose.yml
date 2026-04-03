@@ -44,7 +44,7 @@ services:
         RUN addgroup --system --gid 1001 nodejs
         RUN adduser --system --uid 1001 nextjs
         COPY --from=builder /app/public ./public
-        RUN mkdir -p /app/public/invoices && chown -R nextjs:nodejs /app/public/invoices
+        RUN mkdir -p /app/public/pdf/invoices && chown -R nextjs:nodejs /app/public/pdf/invoices
         COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
         COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
         USER nextjs
@@ -71,7 +71,7 @@ services:
       mongo:
         condition: service_healthy
     volumes:
-      - invoices_data:/app/public/invoices
+      - invoices_data:/app/public/pdf/invoices
     restart: unless-stopped
 
   recurring-cron:

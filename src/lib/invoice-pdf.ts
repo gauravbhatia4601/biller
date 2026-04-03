@@ -14,13 +14,14 @@ export async function generatePdfForInvoice(invoiceDoc: any) {
   const invoiceData = invoiceDoc.toObject ? invoiceDoc.toObject() : invoiceDoc
 
   const invoiceFileName = `invoice_${invoiceData.invoice.number.replace(/\s+/g, '_')}.pdf`
-  const invoiceDir = path.join(process.cwd(), 'public', 'invoices')
+  // Use /pdf/invoices/ to avoid conflict with Next.js route /invoices/[id]
+  const invoiceDir = path.join(process.cwd(), 'public', 'pdf', 'invoices')
   if (!fs.existsSync(invoiceDir)) {
     fs.mkdirSync(invoiceDir, { recursive: true })
   }
 
   const outputPath = path.resolve(invoiceDir, invoiceFileName)
   await builder.generateInvoice(invoiceData, outputPath)
-  return { success: true, pdfPath: `/invoices/${path.basename(outputPath)}` }
+  return { success: true, pdfPath: `/pdf/invoices/${path.basename(outputPath)}` }
 }
 

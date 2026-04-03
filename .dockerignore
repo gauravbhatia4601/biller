@@ -8,4 +8,4 @@ node_modules
 .DS_Store
 *.log
 npm-debug.log*
-public/invoices/*.pdf
+public/pdf/invoices/*.pdf

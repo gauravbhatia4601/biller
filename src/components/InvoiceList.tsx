@@ -176,7 +176,7 @@ export default function InvoiceList() {
                     <div className="flex items-center gap-1">
                       {invoice.pdfPath && (
                         <a
-                          href={invoice.pdfPath}
+                          href={`/api/invoices/${invoice._id}/pdf`}
                           target="_blank"
                           rel="noopener noreferrer"
                           title="View PDF"

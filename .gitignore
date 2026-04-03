@@ -9,4 +9,4 @@ node_modules/
 *.log
 dist/
 build/
-public/invoices/
+public/pdf/invoices/
