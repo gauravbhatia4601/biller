@@ -67,9 +67,8 @@ services:
       - AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
       - AUTH_DEBUG=${AUTH_DEBUG:-false}
       - RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
-    depends_on:
-      mongo:
-        condition: service_healthy
+    networks:
+      - coolify-network
     volumes:
       - invoices_data:/app/public/pdf/invoices
     restart: unless-stopped
@@ -89,18 +88,10 @@ services:
       "
     restart: unless-stopped
 
-  mongo:
-    image: mongo:7
-    volumes:
-      - mongo_data:/data/db
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
 
 volumes:
-  mongo_data:
   invoices_data:
+
+networks:
+  coolify-network:
+    external: true
