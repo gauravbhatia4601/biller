@@ -93,5 +93,5 @@ volumes:
   invoices_data:
 
 networks:
-  coolify-network:
+  coolify:
     external: true
