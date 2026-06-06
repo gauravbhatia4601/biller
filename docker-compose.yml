@@ -68,7 +68,7 @@ services:
       - AUTH_DEBUG=${AUTH_DEBUG:-false}
       - RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
     networks:
-      - coolify-network
+      - coolify
     volumes:
       - invoices_data:/app/public/pdf/invoices
     restart: unless-stopped
