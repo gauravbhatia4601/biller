@@ -94,7 +94,7 @@ export default function ClientForm({ client, onClose, onSave }: ClientFormProps)
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="company" className="block mb-1 text-xs font-medium text-gray-700">Company</label>
               <TextInput
@@ -116,7 +116,7 @@ export default function ClientForm({ client, onClose, onSave }: ClientFormProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="phone" className="block mb-1 text-xs font-medium text-gray-700">Phone</label>
               <TextInput
@@ -147,7 +147,7 @@ export default function ClientForm({ client, onClose, onSave }: ClientFormProps)
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="city" className="block mb-1 text-xs font-medium text-gray-700">City</label>
               <TextInput
@@ -181,11 +181,11 @@ export default function ClientForm({ client, onClose, onSave }: ClientFormProps)
         </form>
       </ModalBody>
       <ModalFooter>
-        <div className="flex justify-end gap-2 w-full">
-          <Button size="sm" color="gray" onClick={onClose}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 w-full">
+          <Button size="sm" color="gray" onClick={onClose} className="w-full sm:w-auto py-2.5">
             Cancel
           </Button>
-          <Button size="sm" color="blue" type="submit" form="client-form">
+          <Button size="sm" color="blue" type="submit" form="client-form" className="w-full sm:w-auto py-2.5">
             {client ? 'Update' : 'Create'} Client
           </Button>
         </div>

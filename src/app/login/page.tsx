@@ -129,17 +129,17 @@ export default function LoginPage() {
     <main className="min-h-screen bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200 flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-4xl !p-0 overflow-hidden border border-slate-200 shadow-xl">
         <div className="grid md:grid-cols-2">
-          <div className="bg-slate-900 text-white p-8 flex flex-col justify-between">
+          <div className="order-2 md:order-1 bg-slate-900 text-white p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <p className="text-xs tracking-[0.3em] uppercase text-slate-300">Secure Access</p>
-              <h1 className="text-4xl font-bold mt-2">Biller</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mt-2">Biller</h1>
               <p className="text-slate-200 mt-3">
                 Protected owner access with PIN and biometric authentication.
               </p>
             </div>
-            <div className="mt-10">
+            <div className="mt-8 sm:mt-10">
               <p className="text-xs text-slate-300 uppercase tracking-widest mb-2">Live Status</p>
-              <div className="rounded-lg bg-slate-800/80 border border-slate-700 px-4 py-3 text-sm">
+              <div className="rounded-lg bg-slate-800/80 border border-slate-700 px-4 py-3 text-sm break-words">
                 {checkingSession ? (
                   <span className="inline-flex items-center gap-2">
                     <Spinner size="sm" /> Checking session...
@@ -154,7 +154,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="order-1 md:order-2 p-6 sm:p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-slate-900">Sign in</h2>
               <p className="text-sm text-slate-600 mt-1">Use your PIN or fingerprint to unlock dashboard access.</p>

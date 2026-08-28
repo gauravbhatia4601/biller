@@ -44,14 +44,14 @@ export default function Navigation() {
               as={Link}
               href={item.href}
               active={isActive}
-              className={isActive ? 'text-blue-600' : ''}
+              className={`py-2.5 md:py-2 ${isActive ? 'text-blue-600' : ''}`}
             >
               {item.label}
             </NavbarLink>
           )
         })}
         <button
-          className="text-sm text-red-600 hover:text-red-700 disabled:opacity-60"
+          className="block w-full text-left px-3 py-2.5 rounded text-sm text-red-600 hover:text-red-700 hover:bg-gray-50 disabled:opacity-60 md:w-auto md:inline md:py-2 md:px-0 md:rounded-none md:hover:bg-transparent"
           onClick={handleLogout}
           disabled={loggingOut}
           type="button"

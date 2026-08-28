@@ -75,9 +75,9 @@ export default function ClientsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Clients</h2>
-          <Button size="xs" color="blue" onClick={handleAdd}>
+          <Button size="xs" color="blue" onClick={handleAdd} className="w-full sm:w-auto py-2.5 px-4 text-sm justify-center">
             <HiOutlinePlus className="h-4 w-4 mr-1" />
             Add Client
           </Button>
@@ -87,13 +87,55 @@ export default function ClientsPage() {
           <div className="text-center py-12">
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No clients yet</h3>
             <p className="text-gray-500 text-sm mb-4">Add your first client to get started</p>
-            <Button size="sm" color="blue" onClick={handleAdd}>
+            <Button size="sm" color="blue" onClick={handleAdd} className="w-full sm:w-auto py-2.5 px-4 justify-center">
               <HiOutlinePlus className="h-4 w-4 mr-1" />
               Add Client
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="space-y-3 sm:hidden">
+            {clients.map((client) => (
+              <div key={client._id} className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 truncate">{client.name}</p>
+                    {client.company ? (
+                      <p className="text-sm text-gray-500 truncate">{client.company}</p>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="xs"
+                      color="light"
+                      onClick={() => handleEdit(client)}
+                      title="Edit"
+                      className="p-2.5"
+                    >
+                      <HiOutlinePencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="failure"
+                      onClick={() => handleDelete(client._id!)}
+                      title="Delete"
+                      className="p-2.5 ml-1"
+                    >
+                      <HiOutlineTrash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-600">
+                  {client.email ? <span className="break-all">{client.email}</span> : null}
+                  {client.phone ? <span>{client.phone}</span> : null}
+                  {[client.city, client.country].filter(Boolean).join(', ') ? (
+                    <span className="break-words">{[client.city, client.country].filter(Boolean).join(', ')}</span>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden sm:block overflow-x-auto">
             <Table hoverable>
               <TableHead>
                 <TableHeadCell>Name</TableHeadCell>
@@ -140,6 +182,7 @@ export default function ClientsPage() {
               </TableBody>
             </Table>
           </div>
+          </>
         )}
 
         {showForm && (

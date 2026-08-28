@@ -95,7 +95,7 @@ export default function InvoiceList() {
     <>
       <div className="overflow-x-auto">
         <Table hoverable>
-          <TableHead>
+          <TableHead className="hidden md:table-header-group">
             <TableHeadCell>Invoice #</TableHeadCell>
             <TableHeadCell>Customer</TableHeadCell>
             <TableHeadCell>Date</TableHeadCell>
@@ -105,7 +105,7 @@ export default function InvoiceList() {
             <TableHeadCell>Status</TableHeadCell>
             <TableHeadCell>Actions</TableHeadCell>
           </TableHead>
-          <TableBody className="divide-y">
+          <TableBody className="flex flex-col gap-3 md:table-row-group md:gap-0 divide-y-0 md:divide-y">
             {invoices.map((invoice) => {
               const subtotal = invoice.items.reduce(
                 (sum, item) => sum + (item.quantity * item.unit_cost),
@@ -115,10 +115,11 @@ export default function InvoiceList() {
               const isRecurringSource = Boolean(invoice.recurring?.enabled)
               const isGeneratedFromRecurring = Boolean(invoice.recurring?.sourceInvoiceId) && !isRecurringSource
               return (
-                <TableRow key={invoice._id} className="bg-white">
-                  <TableCell className="font-medium text-gray-900">
-                    <div className="flex flex-col gap-1">
-                      <span>{invoice.invoice.number}</span>
+                <TableRow key={invoice._id} className="bg-white flex flex-col p-3 border border-gray-200 rounded-lg md:table-row md:p-0 md:border-0 md:rounded-none">
+                  <TableCell className="font-medium text-gray-900 flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Invoice #</span>
+                    <div className="flex flex-col gap-1 items-end md:items-start min-w-0">
+                      <span className="truncate max-w-full">{invoice.invoice.number}</span>
                       {isRecurringSource && (
                         <Badge color="info" className="w-fit">
                           Recurring
@@ -131,49 +132,60 @@ export default function InvoiceList() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-sm text-gray-900">{invoice.customer.name}</p>
+                  <TableCell className="flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="shrink-0 text-xs font-medium text-gray-500 md:hidden">Customer</span>
+                    <div className="min-w-0 text-right md:text-left">
+                      <p className="text-sm text-gray-900 truncate">{invoice.customer.name}</p>
                       {invoice.customer.company && (
-                        <p className="text-xs text-gray-500">{invoice.customer.company}</p>
+                        <p className="text-xs text-gray-500 truncate">{invoice.customer.company}</p>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{invoice.invoice.date}</TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {invoice.invoice.currency} {subtotal.toFixed(2)}
+                  <TableCell className="text-sm flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Date</span>
+                    <span className="whitespace-nowrap">{invoice.invoice.date}</span>
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Amount</span>
+                    <span className="font-medium whitespace-nowrap">
+                      {invoice.invoice.currency} {subtotal.toFixed(2)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Paid</span>
                     {invoice.status === 'partial' ? (
-                      <span className="text-amber-600 font-medium">
+                      <span className="text-amber-600 font-medium whitespace-nowrap">
                         {invoice.invoice.currency} {(invoice.amountPaid || 0).toFixed(2)}
                       </span>
                     ) : invoice.status === 'paid' ? (
-                      <span className="text-green-600 font-medium">
+                      <span className="text-green-600 font-medium whitespace-nowrap">
                         {invoice.invoice.currency} {subtotal.toFixed(2)}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="text-sm flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Schedule</span>
                     {isRecurringSource ? (
-                      <span className="text-blue-700 font-medium">
+                      <span className="text-blue-700 font-medium whitespace-nowrap">
                         Next: {invoice.recurring?.nextRunDate || '-'}
                       </span>
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <button onClick={() => handleStatusClick(invoice)}>
+                  <TableCell className="flex items-center justify-between gap-3 p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="text-xs font-medium text-gray-500 md:hidden">Status</span>
+                    <button onClick={() => handleStatusClick(invoice)} className="p-2 -m-1">
                       <Badge color={badge.color} className="cursor-pointer">
                         {badge.label}
                       </Badge>
                     </button>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
+                  <TableCell className="flex items-center p-0 md:table-cell md:px-6 md:py-4">
+                    <span className="mr-auto text-xs font-medium text-gray-500 md:hidden">Actions</span>
+                    <div className="flex items-center gap-2">
                       {invoice.pdfPath && (
                         <a
                           href={`/api/invoices/${invoice._id}/pdf`}
@@ -181,13 +193,13 @@ export default function InvoiceList() {
                           rel="noopener noreferrer"
                           title="View PDF"
                         >
-                          <Button size="xs" color="light">
+                          <Button size="xs" color="light" className="p-2.5 md:p-1.5 md:px-3">
                             <HiOutlineEye className="h-4 w-4" />
                           </Button>
                         </a>
                       )}
                       <Link href={`/invoices/${invoice._id}`}>
-                        <Button size="xs" color="light" title="Edit">
+                        <Button size="xs" color="light" title="Edit" className="p-2.5 md:p-1.5 md:px-3">
                           <HiOutlinePencil className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -196,6 +208,7 @@ export default function InvoiceList() {
                         color="light"
                         onClick={() => handleGeneratePDF(invoice._id!)}
                         title="Generate PDF"
+                        className="p-2.5 md:p-1.5 md:px-3"
                       >
                         <HiOutlineDocumentDownload className="h-4 w-4" />
                       </Button>
@@ -204,6 +217,7 @@ export default function InvoiceList() {
                         color="failure"
                         onClick={() => handleDelete(invoice._id!)}
                         title="Delete"
+                        className="p-2.5 ml-2 md:ml-0 md:p-1.5 md:px-3"
                       >
                         <HiOutlineTrash className="h-4 w-4" />
                       </Button>
@@ -255,12 +269,12 @@ export default function InvoiceList() {
                   placeholder="Enter amount paid"
                 />
               </div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button
                   color="failure"
                   size="sm"
                   onClick={() => handleStatusUpdate('unpaid')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Unpaid
                 </Button>
@@ -268,7 +282,7 @@ export default function InvoiceList() {
                   color="warning"
                   size="sm"
                   onClick={() => handleStatusUpdate('partial')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Partial
                 </Button>
@@ -276,7 +290,7 @@ export default function InvoiceList() {
                   color="success"
                   size="sm"
                   onClick={() => handleStatusUpdate('paid')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Paid
                 </Button>

@@ -279,7 +279,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Company Information */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Company Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Object.entries(formData.company).map(([key, value]) => (
             <div key={key}>
               <label htmlFor={`company-${key}`} className="block mb-1 text-xs font-medium text-gray-700">
@@ -318,7 +318,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
             ))}
           </Select>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Object.entries(formData.customer).map(([key, value]) => (
             <div key={key}>
               <label htmlFor={`customer-${key}`} className="block mb-1 text-xs font-medium text-gray-700">
@@ -339,7 +339,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Invoice Details */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Invoice Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Object.entries(formData.invoice).map(([key, value]) => (
             <div key={key}>
               <label htmlFor={`invoice-${key}`} className="block mb-1 text-xs font-medium text-gray-700">
@@ -374,7 +374,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Recurring Schedule */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Recurring (Optional)</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="recurring-enabled" className="block mb-1 text-xs font-medium text-gray-700">
               Enable Recurring
@@ -440,7 +440,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
               onChange={(e) => handleChange('recurring', 'dueInDays', Math.max(0, parseInt(e.target.value, 10) || 0))}
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2">
             <label htmlFor="recurring-autoPdf" className="block mb-1 text-xs font-medium text-gray-700">
               Auto Generate PDF
             </label>
@@ -463,9 +463,15 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Items</h3>
         <div className="space-y-3">
           {formData.items.map((item, index) => (
-            <div key={index} className="grid grid-cols-12 gap-2 items-start">
-              <div className="col-span-3">
-                {index === 0 && <label className="block mb-1 text-xs font-medium text-gray-700">Item Name</label>}
+            <div
+              key={index}
+              className="space-y-2 rounded-lg border border-gray-200 bg-white p-3 sm:space-y-0 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:grid sm:grid-cols-12 sm:gap-2 sm:items-start"
+            >
+              <div className="sm:col-span-3">
+                <label className="block mb-1 text-xs font-medium text-gray-700 sm:hidden">Item Name</label>
+                {index === 0 && (
+                  <label className="hidden sm:block mb-1 text-xs font-medium text-gray-700">Item Name</label>
+                )}
                 <TextInput
                   sizing="sm"
                   placeholder="Item Name"
@@ -474,8 +480,11 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
                   required
                 />
               </div>
-              <div className="col-span-4">
-                {index === 0 && <label className="block mb-1 text-xs font-medium text-gray-700">Description</label>}
+              <div className="sm:col-span-4">
+                <label className="block mb-1 text-xs font-medium text-gray-700 sm:hidden">Description</label>
+                {index === 0 && (
+                  <label className="hidden sm:block mb-1 text-xs font-medium text-gray-700">Description</label>
+                )}
                 <Textarea
                   rows={2}
                   placeholder="Description"
@@ -485,42 +494,55 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
                   style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                 />
               </div>
-              <div className="col-span-2">
-                {index === 0 && <label className="block mb-1 text-xs font-medium text-gray-700">Qty</label>}
-                <TextInput
-                  sizing="sm"
-                  type="number"
-                  placeholder="Qty"
-                  value={item.quantity}
-                  onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                  min={0}
-                  step={0.01}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-2 sm:contents">
+                <div className="sm:col-span-2">
+                  <label className="block mb-1 text-xs font-medium text-gray-700 sm:hidden">Qty</label>
+                  {index === 0 && (
+                    <label className="hidden sm:block mb-1 text-xs font-medium text-gray-700">Qty</label>
+                  )}
+                  <TextInput
+                    sizing="sm"
+                    type="number"
+                    placeholder="Qty"
+                    value={item.quantity}
+                    onChange={(e) => handleItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
+                    min={0}
+                    step={0.01}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block mb-1 text-xs font-medium text-gray-700 sm:hidden">Unit Cost</label>
+                  {index === 0 && (
+                    <label className="hidden sm:block mb-1 text-xs font-medium text-gray-700">Unit Cost</label>
+                  )}
+                  <TextInput
+                    sizing="sm"
+                    type="number"
+                    placeholder="Unit Cost"
+                    value={item.unit_cost}
+                    onChange={(e) => handleItemChange(index, 'unit_cost', parseFloat(e.target.value) || 0)}
+                    min={0}
+                    step={0.01}
+                    required
+                  />
+                </div>
               </div>
-              <div className="col-span-2">
-                {index === 0 && <label className="block mb-1 text-xs font-medium text-gray-700">Unit Cost</label>}
-                <TextInput
-                  sizing="sm"
-                  type="number"
-                  placeholder="Unit Cost"
-                  value={item.unit_cost}
-                  onChange={(e) => handleItemChange(index, 'unit_cost', parseFloat(e.target.value) || 0)}
-                  min={0}
-                  step={0.01}
-                  required
-                />
-              </div>
-              <div className="col-span-1 flex items-end gap-1">
-                {index === 0 && <label className="block mb-1 text-xs font-medium text-gray-700 invisible">&nbsp;</label>}
-                <div className="flex items-center gap-1 h-[34px]">
-                  <span className="text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {(item.quantity * item.unit_cost).toFixed(2)}
-                  </span>
+              <div className="sm:col-span-1 sm:flex sm:items-end sm:gap-1">
+                {index === 0 && (
+                  <label className="hidden sm:block mb-1 text-xs font-medium text-gray-700 invisible">&nbsp;</label>
+                )}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-baseline gap-1 min-w-0">
+                    <span className="text-xs font-medium text-gray-700 sm:hidden">Amount</span>
+                    <span className="text-sm font-medium text-gray-900 whitespace-nowrap sm:text-xs sm:text-gray-700">
+                      {(item.quantity * item.unit_cost).toFixed(2)}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="text-red-500 hover:text-red-700"
+                    className="-mr-3 flex h-11 w-11 shrink-0 items-center justify-center text-red-500 hover:text-red-700 sm:mr-0 sm:h-8 sm:w-8"
                     title="Remove item"
                   >
                     <HiOutlineTrash className="h-4 w-4" />
@@ -530,7 +552,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
             </div>
           ))}
         </div>
-        <Button size="xs" color="light" onClick={addItem} className="mt-3">
+        <Button size="xs" color="light" onClick={addItem} className="mt-3 w-full py-3 text-sm sm:w-auto sm:py-2 sm:text-xs">
           <HiOutlinePlus className="h-4 w-4 mr-1" />
           Add Item
         </Button>
@@ -539,7 +561,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Financial */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Financial Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label htmlFor="tax" className="block mb-1 text-xs font-medium text-gray-700">Tax %</label>
             <TextInput
@@ -586,7 +608,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Account Details */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Account Details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="bankName" className="block mb-1 text-xs font-medium text-gray-700">Bank Name</label>
             <TextInput
@@ -647,7 +669,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
               placeholder="Branch Name"
             />
           </div>
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2">
             <label htmlFor="branchAddress" className="block mb-1 text-xs font-medium text-gray-700">Branch Address</label>
             <TextInput
               id="branchAddress"
@@ -663,7 +685,7 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
       {/* Notes & Terms */}
       <Card>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Notes & Terms</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="notes" className="block mb-1 text-xs font-medium text-gray-700">Notes</label>
             <Textarea
@@ -687,8 +709,8 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
         </div>
       </Card>
 
-      <div className="flex gap-2">
-        <Button type="submit" size="sm" color="blue" disabled={loading}>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button type="submit" size="sm" color="blue" disabled={loading} className="w-full py-3 text-sm sm:w-auto sm:py-1.5 sm:text-xs">
           {loading ? (
             <>
               <Spinner size="sm" className="mr-2" />

@@ -64,37 +64,37 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
               <Card className="!p-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
+                  <div className="p-2 shrink-0 bg-blue-50 rounded-lg">
                     <HiOutlineDocumentText className="h-5 w-5 text-blue-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-500">Total Invoices</p>
-                    <p className="text-xl font-bold text-gray-900">{stats?.totalInvoices || 0}</p>
+                    <p className="text-base sm:text-xl font-bold text-gray-900">{stats?.totalInvoices || 0}</p>
                   </div>
                 </div>
               </Card>
               <Card className="!p-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-50 rounded-lg">
+                  <div className="p-2 shrink-0 bg-emerald-50 rounded-lg">
                     <HiOutlineTemplate className="h-5 w-5 text-emerald-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-500">Templates</p>
-                    <p className="text-xl font-bold text-gray-900">{stats?.totalTemplates || 0}</p>
+                    <p className="text-base sm:text-xl font-bold text-gray-900">{stats?.totalTemplates || 0}</p>
                   </div>
                 </div>
               </Card>
               <Card className="!p-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-50 rounded-lg">
+                  <div className="p-2 shrink-0 bg-red-50 rounded-lg">
                     <HiOutlineCurrencyDollar className="h-5 w-5 text-red-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-500">Unpaid</p>
-                    <p className="text-xl font-bold text-red-500">
+                    <p className="text-sm sm:text-xl font-bold text-red-500 break-words leading-snug">
                       {stats?.totalUnpaidRevenue && stats.totalUnpaidRevenue > 0
                         ? `AED ${stats.totalUnpaidRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : '0.00'}
@@ -104,12 +104,12 @@ export default function DashboardPage() {
               </Card>
               <Card className="!p-0">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-50 rounded-lg">
+                  <div className="p-2 shrink-0 bg-green-50 rounded-lg">
                     <HiOutlineCurrencyDollar className="h-5 w-5 text-green-600" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-medium text-gray-500">Collected</p>
-                    <p className="text-xl font-bold text-green-500">
+                    <p className="text-sm sm:text-xl font-bold text-green-500 break-words leading-snug">
                       {stats?.totalRevenue
                         ? `AED ${stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : 'AED 0.00'}
@@ -121,11 +121,11 @@ export default function DashboardPage() {
 
             {/* Recent Invoices */}
             <Card>
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center gap-2 mb-3">
                 <h3 className="text-sm font-semibold text-gray-900">Recent Invoices</h3>
                 <Link
                   href="/invoices"
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap"
                 >
                   View All →
                 </Link>
@@ -140,65 +140,69 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={invoice._id}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+                        className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/invoices/${invoice._id}`}
-                              className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
-                            >
-                              {invoice.invoice.number}
-                            </Link>
-                            {isRecurringSource && (
-                              <Badge color="info" className="text-[10px] leading-none">
-                                Recurring
-                              </Badge>
-                            )}
-                            {isGeneratedFromRecurring && (
-                              <Badge color="purple" className="text-[10px] leading-none">
-                                Generated
-                              </Badge>
-                            )}
-                            {invoice.pdfPath && (
-                              <a
-                                href={`/api/invoices/${invoice._id}/pdf`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-green-600 hover:text-green-700"
-                                title="View PDF"
-                              >
-                                📄
-                              </a>
-                            )}
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                          <div className="flex items-center justify-between gap-2 sm:contents">
+                            <div className="flex flex-col gap-0.5 min-w-0 sm:flex-1">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Link
+                                  href={`/invoices/${invoice._id}`}
+                                  className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
+                                >
+                                  {invoice.invoice.number}
+                                </Link>
+                                {isRecurringSource && (
+                                  <Badge color="info" className="shrink-0 text-[10px] leading-none">
+                                    Recurring
+                                  </Badge>
+                                )}
+                                {isGeneratedFromRecurring && (
+                                  <Badge color="purple" className="shrink-0 text-[10px] leading-none">
+                                    Generated
+                                  </Badge>
+                                )}
+                                {invoice.pdfPath && (
+                                  <a
+                                    href={`/api/invoices/${invoice._id}/pdf`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="shrink-0 p-1 text-xs text-green-600 hover:text-green-700"
+                                    title="View PDF"
+                                  >
+                                    📄
+                                  </a>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500 truncate">
+                                {invoice.customer.name}
+                                {invoice.customer.company && ` - ${invoice.customer.company}`}
+                              </p>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                              {invoice.invoice.currency} {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
                           </div>
-                          <p className="text-xs text-gray-500 truncate">
-                            {invoice.customer.name}
-                            {invoice.customer.company && ` - ${invoice.customer.company}`}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 ml-4">
-                          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
-                            {invoice.invoice.currency} {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
-                          {isRecurringSource && (
-                            <span className="text-xs text-blue-600 whitespace-nowrap">
-                              Next: {invoice.recurring?.nextRunDate || '-'}
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                            {isRecurringSource && (
+                              <span className="text-xs text-blue-600 whitespace-nowrap">
+                                Next: {invoice.recurring?.nextRunDate || '-'}
+                              </span>
+                            )}
+                            {invoice.status === 'partial' && (
+                              <span className="text-xs text-amber-600 whitespace-nowrap">
+                                Paid: {invoice.invoice.currency} {(invoice.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            )}
+                            <button onClick={() => handleStatusClick(invoice)} className="p-2 -m-1">
+                              <Badge color={badge.color} className="cursor-pointer">
+                                {badge.label}
+                              </Badge>
+                            </button>
+                            <span className="text-xs text-gray-400 whitespace-nowrap sm:ml-auto">
+                              {new Date(invoice.createdAt).toLocaleDateString()}
                             </span>
-                          )}
-                          {invoice.status === 'partial' && (
-                            <span className="text-xs text-amber-600 whitespace-nowrap">
-                              Paid: {invoice.invoice.currency} {(invoice.amountPaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          )}
-                          <button onClick={() => handleStatusClick(invoice)}>
-                            <Badge color={badge.color} className="cursor-pointer">
-                              {badge.label}
-                            </Badge>
-                          </button>
-                          <span className="text-xs text-gray-400 whitespace-nowrap">
-                            {new Date(invoice.createdAt).toLocaleDateString()}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     )
@@ -259,12 +263,12 @@ export default function DashboardPage() {
                   placeholder="Enter amount paid"
                 />
               </div>
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Button
                   color="failure"
                   size="sm"
                   onClick={() => handleStatusUpdate('unpaid')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Unpaid
                 </Button>
@@ -272,7 +276,7 @@ export default function DashboardPage() {
                   color="warning"
                   size="sm"
                   onClick={() => handleStatusUpdate('partial')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Partial
                 </Button>
@@ -280,7 +284,7 @@ export default function DashboardPage() {
                   color="success"
                   size="sm"
                   onClick={() => handleStatusUpdate('paid')}
-                  className="flex-1"
+                  className="flex-1 min-w-[88px] py-2.5 sm:py-1.5"
                 >
                   Paid
                 </Button>

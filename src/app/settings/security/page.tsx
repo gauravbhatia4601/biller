@@ -221,8 +221,8 @@ export default function SecuritySettingsPage() {
       <Navigation />
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Card className="border border-slate-200 shadow-lg">
-          <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
+            <div className="min-w-0">
               <h1 className="text-2xl font-semibold text-slate-900">Security Settings</h1>
               <p className="text-sm text-slate-600 mt-1">
                 Enroll a platform authenticator to allow secure fingerprint sign-in.
@@ -252,9 +252,15 @@ export default function SecuritySettingsPage() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 mb-6">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <p className="text-xs uppercase tracking-widest text-slate-500">Enrolled Fingerprints</p>
-              <Button size="xs" color="light" onClick={loadCredentials} disabled={loadingCredentials}>
+              <Button
+                size="xs"
+                color="light"
+                className="py-2.5 px-3 text-sm sm:py-1 sm:px-2 sm:text-xs"
+                onClick={loadCredentials}
+                disabled={loadingCredentials}
+              >
                 {loadingCredentials ? 'Refreshing...' : 'Refresh'}
               </Button>
             </div>
@@ -272,7 +278,7 @@ export default function SecuritySettingsPage() {
                     key={credential.credentialID}
                     className="rounded-lg border border-slate-200 p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       {editingCredentialId === credential.credentialID ? (
                         <TextInput
                           value={editingLabel}
@@ -282,35 +288,47 @@ export default function SecuritySettingsPage() {
                       ) : (
                         <p className="text-sm font-medium text-slate-900">{credential.label}</p>
                       )}
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1 break-words">
                         Added:{' '}
                         {credential.createdAt ? new Date(credential.createdAt).toLocaleString() : 'Unknown'} | Last used:{' '}
                         {credential.lastUsedAt ? new Date(credential.lastUsedAt).toLocaleString() : 'Never'}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {editingCredentialId === credential.credentialID ? (
                         <>
                           <Button
                             size="xs"
                             color="blue"
+                            className="py-2.5 px-4 text-sm sm:py-1 sm:px-2 sm:text-xs"
                             disabled={actionLoadingId === credential.credentialID}
                             onClick={() => saveRename(credential.credentialID)}
                           >
                             Save
                           </Button>
-                          <Button size="xs" color="light" onClick={cancelRename}>
+                          <Button
+                            size="xs"
+                            color="light"
+                            className="py-2.5 px-4 text-sm sm:py-1 sm:px-2 sm:text-xs"
+                            onClick={cancelRename}
+                          >
                             Cancel
                           </Button>
                         </>
                       ) : (
                         <>
-                          <Button size="xs" color="light" onClick={() => startRename(credential)}>
+                          <Button
+                            size="xs"
+                            color="light"
+                            className="py-2.5 px-4 text-sm sm:py-1 sm:px-2 sm:text-xs"
+                            onClick={() => startRename(credential)}
+                          >
                             Rename
                           </Button>
                           <Button
                             size="xs"
                             color="failure"
+                            className="py-2.5 px-4 text-sm sm:py-1 sm:px-2 sm:text-xs"
                             disabled={actionLoadingId === credential.credentialID}
                             onClick={() => deleteCredential(credential.credentialID)}
                           >
