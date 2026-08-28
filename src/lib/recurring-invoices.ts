@@ -1,6 +1,7 @@
 import Invoice from '@/models/Invoice'
 import { generatePdfForInvoice } from '@/lib/invoice-pdf'
 import { getNextInvoiceNumber } from '@/lib/invoice-number'
+import { notifyInvoiceGenerated } from '@/lib/notifications/service'
 
 type RecurringConfig = {
   enabled?: boolean
@@ -86,6 +87,7 @@ async function cloneRecurringInvoice(sourceInvoice: any, runDate: Date, dueInDay
 
   const invoice = new Invoice(payload)
   await invoice.save()
+  await notifyInvoiceGenerated(invoice)
   return invoice
 }
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Navbar, NavbarBrand, NavbarCollapse, NavbarLink, NavbarToggle } from 'flowbite-react'
 import { useState } from 'react'
+import { NotificationBell } from '@/components/NotificationBell'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -34,7 +35,10 @@ export default function Navigation() {
           Biller
         </span>
       </NavbarBrand>
-      <NavbarToggle />
+      <div className="flex items-center gap-1 md:order-2">
+        <NotificationBell />
+        <NavbarToggle />
+      </div>
       <NavbarCollapse>
         {navItems.map((item) => {
           const isActive = pathname === item.href

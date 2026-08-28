@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import { processRecurringInvoices } from '@/lib/recurring-invoices'
+import { runOverdueScan } from '@/lib/notifications/service'
 
 // POST /api/invoices/recurring/process - Trigger recurring invoice generation manually (cron-friendly).
 export async function POST(request: Request) {
@@ -16,6 +17,13 @@ export async function POST(request: Request) {
 
     await connectDB()
     await processRecurringInvoices()
+    // The nightly cron also drives the overdue scan so reminders fire even
+    // if the owner never opens the app. Never fail the cron over it.
+    try {
+      await runOverdueScan({ force: true })
+    } catch (scanError: any) {
+      console.error('Overdue scan failed during cron run:', scanError?.message || scanError)
+    }
     return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ error: error.message || 'Recurring processing failed' }, { status: 500 })

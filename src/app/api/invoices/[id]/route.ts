@@ -3,6 +3,7 @@ import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
 import { config } from '@/config/config'
 import { normalizeRecurringConfig } from '@/lib/recurring-invoices'
+import { deleteNotificationsForInvoice } from '@/lib/notifications/service'
 
 // GET /api/invoices/[id] - Get single invoice
 export async function GET(
@@ -78,11 +79,13 @@ export async function DELETE(
   try {
     await connectDB()
     const invoice = await Invoice.findByIdAndDelete(params.id)
-    
+
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
     }
-    
+
+    await deleteNotificationsForInvoice(params.id)
+
     return NextResponse.json({ message: 'Invoice deleted successfully' })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

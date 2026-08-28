@@ -9,7 +9,7 @@
  *  - Everything else passes through untouched.
  */
 
-const CACHE_NAME = 'biller-v1'
+const CACHE_NAME = 'biller-v2'
 const OFFLINE_URL = '/offline'
 
 self.addEventListener('install', (event) => {
@@ -86,4 +86,27 @@ self.addEventListener('fetch', (event) => {
       })()
     )
   }
+})
+
+/*
+ * Local (non-push) notifications raised via registration.showNotification
+ * land here — clicking one focuses the app and navigates to the invoice.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = (event.notification.data && event.notification.data.url) || '/dashboard'
+
+  event.waitUntil(
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      for (const client of clientList) {
+        if ('focus' in client) {
+          await client.focus()
+          if ('navigate' in client) await client.navigate(target)
+          return
+        }
+      }
+      await self.clients.openWindow(target)
+    })()
+  )
 })
