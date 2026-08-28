@@ -140,7 +140,8 @@ export default function InvoiceForm({ invoiceId, onSave }: InvoiceFormProps) {
         },
       })
     } else if (!invoiceId) {
-      const currentYear = new Date().getFullYear()
+      // Match the server's UTC-based numbering (src/lib/invoice-number.ts)
+      const currentYear = new Date().getUTCFullYear()
       const generateInvoiceNumber = async () => {
         try {
           const response = await fetch('/api/invoices/next-number')

@@ -2,79 +2,72 @@ import { NextResponse } from 'next/server'
 import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
 import { processRecurringInvoices } from '@/lib/recurring-invoices'
+import { computeInvoiceTotals } from '@/lib/invoice-totals'
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+
+const NO_STORE_HEADERS = { 'Cache-Control': 'no-store' }
 
 export async function GET() {
   try {
     await connectDB()
     await processRecurringInvoices()
 
-    const totalInvoices = await Invoice.countDocuments({ isTemplate: false })
-    const totalTemplates = await Invoice.countDocuments({ isTemplate: true })
+    const [totalInvoices, totalTemplates] = await Promise.all([
+      Invoice.countDocuments({ isTemplate: false }),
+      Invoice.countDocuments({ isTemplate: true }),
+    ])
 
     const allInvoices = await Invoice.find({ isTemplate: false })
-      .select('items financial status amountPaid')
+      .select('items fields financial status amountPaid')
+      .lean()
 
     let totalRevenue = 0
     let totalUnpaidRevenue = 0
     let totalPartialRevenue = 0
 
-    allInvoices.forEach((invoice: any) => {
-      const subtotal = invoice.items.reduce(
-        (sum: number, item: any) => sum + item.quantity * item.unit_cost,
-        0
-      )
-      const tax = invoice.financial?.tax || 0
-      const shipping = invoice.financial?.shipping || 0
-      const discounts = invoice.financial?.discounts || 0
-      const total = subtotal + tax + shipping - discounts
+    for (const invoice of allInvoices as any[]) {
+      const { total } = computeInvoiceTotals(invoice)
+      const paid = Number(invoice.amountPaid) || 0
 
       if (invoice.status === 'paid') {
         totalRevenue += total
       } else if (invoice.status === 'partial') {
-        const paid = invoice.amountPaid || 0
         totalPartialRevenue += paid
-        totalUnpaidRevenue += total - paid
+        // Clamp so an over-recorded payment can't make the business look "owed" negative money.
+        totalUnpaidRevenue += Math.max(0, total - paid)
       } else {
         totalUnpaidRevenue += total
       }
-    })
+    }
 
     const recentInvoices = await Invoice.find({ isTemplate: false })
       .sort({ createdAt: -1 })
       .limit(10)
       .select(
-        'invoice.number invoice.date invoice.currency customer.name customer.company items financial createdAt pdfPath status amountPaid recurring.enabled recurring.nextRunDate recurring.sourceInvoiceId'
+        'invoice.number invoice.date invoice.currency customer.name customer.company items fields financial createdAt pdfPath status amountPaid recurring.enabled recurring.nextRunDate recurring.sourceInvoiceId'
       )
+      .lean()
 
     const formattedInvoices = recentInvoices.map((invoice: any) => {
-      const subtotal = invoice.items.reduce(
-        (sum: number, item: any) => sum + item.quantity * item.unit_cost,
-        0
-      )
-      const tax = invoice.financial?.tax || 0
-      const shipping = invoice.financial?.shipping || 0
-      const discounts = invoice.financial?.discounts || 0
-      const total = subtotal + tax + shipping - discounts
+      const { subtotal, total } = computeInvoiceTotals(invoice)
 
       return {
         _id: invoice._id,
         invoice: {
-          number: invoice.invoice.number,
-          date: invoice.invoice.date,
-          currency: invoice.invoice.currency || 'USD',
+          number: invoice.invoice?.number || '',
+          date: invoice.invoice?.date || '',
+          currency: invoice.invoice?.currency || 'USD',
         },
         customer: {
-          name: invoice.customer.name,
-          company: invoice.customer.company,
+          name: invoice.customer?.name || '',
+          company: invoice.customer?.company || '',
         },
         total,
         subtotal,
         pdfPath: invoice.pdfPath,
         status: invoice.status || 'unpaid',
-        amountPaid: invoice.amountPaid || 0,
+        amountPaid: Number(invoice.amountPaid) || 0,
         recurring: {
           enabled: Boolean(invoice?.recurring?.enabled),
           nextRunDate: invoice?.recurring?.nextRunDate || '',
@@ -93,19 +86,16 @@ export async function GET() {
         recentInvoices: formattedInvoices,
       },
       {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        },
+        headers: NO_STORE_HEADERS,
       }
     )
-  } catch (error: any) {
+  } catch (error) {
+    console.error('Failed to load invoice stats:', error)
     return NextResponse.json(
-      { error: error.message },
+      { error: 'Failed to load invoice stats' },
       {
         status: 500,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        },
+        headers: NO_STORE_HEADERS,
       }
     )
   }

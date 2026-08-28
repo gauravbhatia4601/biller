@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import { getNextInvoiceNumber } from '@/lib/invoice-number'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/invoices/next-number - Get next available invoice number
 export async function GET() {
   try {

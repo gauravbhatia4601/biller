@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { computeInvoiceTotals } from '../lib/invoice-totals';
 
 const invoiceSchema = new mongoose.Schema({
   // Company Information
@@ -105,35 +106,14 @@ const invoiceSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Calculate subtotal
+// Calculate subtotal (delegates to the shared totals helper)
 invoiceSchema.virtual('subtotal').get(function() {
-  return this.items.reduce((sum, item) => {
-    return sum + (item.quantity * item.unit_cost);
-  }, 0);
+  return computeInvoiceTotals(this).subtotal;
 });
 
-// Calculate total
+// Calculate total (delegates to the shared totals helper)
 invoiceSchema.virtual('total').get(function() {
-  let total = this.subtotal;
-  
-  // Apply discount
-  if (this.fields.discounts && this.financial.discounts) {
-    total -= this.financial.discounts;
-  }
-  
-  // Apply tax
-  if (this.fields.tax === '%' && this.financial.tax > 0) {
-    total += (total * this.financial.tax / 100);
-  } else if (this.financial.tax > 0) {
-    total += this.financial.tax;
-  }
-  
-  // Apply shipping
-  if (this.fields.shipping && this.financial.shipping) {
-    total += this.financial.shipping;
-  }
-  
-  return total;
+  return computeInvoiceTotals(this).total;
 });
 
 invoiceSchema.set('toJSON', { virtuals: true });

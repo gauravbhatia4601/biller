@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import Client from '@/models/Client'
 import { connectDB } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/clients - Get all clients
 export async function GET() {
   try {

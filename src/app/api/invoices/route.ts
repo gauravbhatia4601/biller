@@ -5,6 +5,8 @@ import { config } from '@/config/config'
 import { getNextInvoiceNumber } from '@/lib/invoice-number'
 import { normalizeRecurringConfig, processRecurringInvoices } from '@/lib/recurring-invoices'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/invoices - Get all invoices
 export async function GET() {
   try {

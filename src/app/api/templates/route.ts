@@ -3,6 +3,8 @@ import Invoice from '@/models/Invoice'
 import { connectDB } from '@/lib/db'
 import { config } from '@/config/config'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/templates - Get all templates
 export async function GET() {
   try {

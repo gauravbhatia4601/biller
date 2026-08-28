@@ -79,6 +79,32 @@ interface Invoice {
   }
 }
 
+// Slim shape returned by GET /api/invoices/stats/summary — NOT a full Invoice
+// (no items/fields/financial), so it must not extend the Invoice interface.
+interface RecentInvoice {
+  _id: string
+  invoice: {
+    number: string
+    date: string
+    currency: string
+  }
+  customer: {
+    name: string
+    company: string
+  }
+  total: number
+  subtotal: number
+  pdfPath?: string
+  status?: 'unpaid' | 'partial' | 'paid'
+  amountPaid: number
+  recurring: {
+    enabled: boolean
+    nextRunDate: string
+    sourceInvoiceId: string | null
+  }
+  createdAt: string
+}
+
 interface InvoiceState {
   invoices: Invoice[]
   currentInvoice: Invoice | null
@@ -89,7 +115,7 @@ interface InvoiceState {
     totalTemplates: number
     totalRevenue: number
     totalUnpaidRevenue: number
-    recentInvoices: (Invoice & { total: number; createdAt: string })[]
+    recentInvoices: RecentInvoice[]
   } | null
 }
 

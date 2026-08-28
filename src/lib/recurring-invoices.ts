@@ -99,41 +99,80 @@ async function processInternal() {
   })
 
   for (const sourceInvoice of recurringInvoices) {
-    const recurring = (sourceInvoice.recurring || {}) as RecurringConfig
-    const dueInDays = Math.max(0, recurring.dueInDays ?? 14)
+    // Isolate failures: one malformed recurring doc must not reject the whole
+    // run and 500 every dashboard request.
+    try {
+      const recurring = (sourceInvoice.recurring || {}) as RecurringConfig
+      const dueInDays = Math.max(0, recurring.dueInDays ?? 14)
 
-    let nextRun = parseDateString(recurring.nextRunDate)
-    if (!nextRun) {
-      nextRun = computeFirstNextRunDate(sourceInvoice.invoice?.date, recurring)
-      if (!nextRun) continue
-    }
-
-    let generatedCount = 0
-    // Backfill missed runs, but keep a strict cap for safety.
-    while (nextRun && nextRun.getTime() <= todayDate.getTime() && generatedCount < 24) {
-      const createdInvoice = await cloneRecurringInvoice(sourceInvoice, nextRun, dueInDays)
-      if (recurring.autoGeneratePdf !== false) {
-        try {
-          const pdfResult = await generatePdfForInvoice(createdInvoice)
-          if (pdfResult.success) {
-            createdInvoice.pdfPath = pdfResult.pdfPath
-            await createdInvoice.save()
-          }
-        } catch (error: any) {
-          console.error('Recurring PDF generation failed:', error?.message || error)
-        }
+      let nextRun = parseDateString(recurring.nextRunDate)
+      if (!nextRun) {
+        nextRun = computeFirstNextRunDate(sourceInvoice.invoice?.date, recurring)
+        if (!nextRun) continue
       }
 
-      generatedCount += 1
-      nextRun = nextRunByFrequency(nextRun, recurring)
-    }
+      // Only advance nextRunDate if no other process already did — the
+      // conditional match makes concurrent runs clobber-proof on write-back.
+      // Legacy docs may have the field missing or null, so the first advance
+      // matches all three states before tracking our own written value.
+      let storedValue = recurring.nextRunDate || ''
+      const advancePointer = async (nextValue: string) => {
+        const dateMatch: any = storedValue
+          ? { 'recurring.nextRunDate': storedValue }
+          : {
+              $or: [
+                { 'recurring.nextRunDate': '' },
+                { 'recurring.nextRunDate': null },
+                { 'recurring.nextRunDate': { $exists: false } },
+              ],
+            }
 
-    await sourceInvoice.updateOne({
-      $set: {
-        'recurring.nextRunDate': nextRun ? formatDateString(nextRun) : '',
-        'recurring.lastRunAt': generatedCount > 0 ? new Date() : sourceInvoice.recurring?.lastRunAt || null,
-      },
-    })
+        const result = await Invoice.updateOne(
+          { _id: sourceInvoice._id, ...dateMatch },
+          { $set: { 'recurring.nextRunDate': nextValue } }
+        )
+
+        if (result.matchedCount === 0) {
+          throw new Error('nextRunDate was advanced by another process')
+        }
+        storedValue = nextValue
+      }
+
+      let generatedCount = 0
+      // Backfill missed runs, but keep a strict cap for safety. The stored
+      // pointer is advanced after every successful clone, so a failure
+      // mid-backfill never regenerates invoices that already persisted.
+      while (nextRun && nextRun.getTime() <= todayDate.getTime() && generatedCount < 24) {
+        const createdInvoice = await cloneRecurringInvoice(sourceInvoice, nextRun, dueInDays)
+        if (recurring.autoGeneratePdf !== false) {
+          try {
+            const pdfResult = await generatePdfForInvoice(createdInvoice)
+            if (pdfResult.success) {
+              createdInvoice.pdfPath = pdfResult.pdfPath
+              await createdInvoice.save()
+            }
+          } catch (error: any) {
+            console.error('Recurring PDF generation failed:', error?.message || error)
+          }
+        }
+
+        generatedCount += 1
+        nextRun = nextRunByFrequency(nextRun, recurring)
+        await advancePointer(formatDateString(nextRun))
+      }
+
+      if (generatedCount > 0) {
+        await Invoice.updateOne(
+          { _id: sourceInvoice._id },
+          { $set: { 'recurring.lastRunAt': new Date() } }
+        )
+      }
+    } catch (error: any) {
+      console.error(
+        `Failed to process recurring invoice ${sourceInvoice._id}:`,
+        error?.message || error
+      )
+    }
   }
 }
 
