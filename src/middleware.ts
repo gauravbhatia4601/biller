@@ -6,6 +6,7 @@ import { verifySessionTokenEdge } from '@/lib/auth/session-edge'
 const isPublicPath = (pathname: string) => {
   return (
     pathname === '/login' ||
+    pathname === '/offline' ||
     pathname.startsWith('/api/auth/') ||
     pathname === '/api/invoices/recurring/process' ||
     pathname.startsWith('/_next/') ||
