@@ -35,7 +35,7 @@ export default function Navigation() {
           Biller
         </span>
       </NavbarBrand>
-      <div className="flex items-center gap-1 md:order-2">
+      <div className="flex items-center gap-1 md:ml-auto">
         <NotificationBell />
         <NavbarToggle />
       </div>

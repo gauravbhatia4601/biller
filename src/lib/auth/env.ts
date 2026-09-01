@@ -13,7 +13,12 @@ export const authConfig = {
   webAuthnRpName: process.env.AUTH_WEBAUTHN_RP_NAME || 'Biller',
   pinMaxAttempts: parseNumberEnv(process.env.AUTH_PIN_MAX_ATTEMPTS, 5),
   pinLockMs: parseNumberEnv(process.env.AUTH_PIN_LOCK_MS, 15 * 60 * 1000),
-  sessionTtlSeconds: parseNumberEnv(process.env.AUTH_SESSION_TTL_SECONDS, 60 * 60 * 8),
+  // 30 days: a single-owner app — long sessions keep the PWA's notification
+  // poller (and OS toasts) alive instead of silently logging out mid-day.
+  sessionTtlSeconds: parseNumberEnv(
+    process.env.AUTH_SESSION_TTL_SECONDS,
+    30 * 24 * 60 * 60
+  ),
 }
 
 export function assertAuthEnv() {

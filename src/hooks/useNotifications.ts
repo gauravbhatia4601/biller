@@ -38,18 +38,17 @@ export function useNotifications(options?: { pollIntervalMs?: number }) {
   }, [])
 
   const processItems = useCallback((items: NotificationDTO[]) => {
+    // Initialize the seen-floor on the FIRST poll even when it returns zero
+    // items — otherwise the first genuinely new notification would be
+    // misclassified as pre-existing and never ping.
+    if (!initializedRef.current) {
+      lastSeenPingRef.current = readStoredFloor()
+      initializedRef.current = true
+    }
+
     if (items.length === 0) return
 
     const maxPing = maxPingFloor(items)
-
-    if (!initializedRef.current) {
-      // First fetch after page load: adopt everything that already exists
-      // (floored by what other tabs have already pinged) — no pings for
-      // pre-existing items.
-      lastSeenPingRef.current = Math.max(maxPing, readStoredFloor())
-      initializedRef.current = true
-      return
-    }
 
     // Genuinely new: newer than anything seen so far. Re-check the stored
     // floor so only the first tab to observe an item pings.
@@ -80,13 +79,17 @@ export function useNotifications(options?: { pollIntervalMs?: number }) {
     }
   }, [])
 
+  const stoppedRef = useRef(false)
+
   const refresh = useCallback(async () => {
     try {
       const response = await fetch('/api/notifications', { cache: 'no-store' })
 
       if (response.status === 401) {
-        // Session expired — stop polling; Navigation unmounts on /login anyway.
+        // Session expired — kill the interval AND the event listeners; the
+        // login page unmounts this hook anyway.
         setError('Session expired')
+        stoppedRef.current = true
         if (pollTimerRef.current) {
           clearInterval(pollTimerRef.current)
           pollTimerRef.current = null
@@ -110,6 +113,8 @@ export function useNotifications(options?: { pollIntervalMs?: number }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    let lastEventRefreshAt = 0
+
     refresh()
 
     const tick = () => {
@@ -117,16 +122,22 @@ export function useNotifications(options?: { pollIntervalMs?: number }) {
     }
     pollTimerRef.current = setInterval(tick, pollIntervalMs)
 
-    const onVisible = () => {
-      if (!document.hidden) refresh()
+    // Tab switches fire 'focus' AND 'visibilitychange' back-to-back — debounce
+    // so each refocus costs a single fetch.
+    const onWake = () => {
+      if (stoppedRef.current || document.hidden) return
+      const now = Date.now()
+      if (now - lastEventRefreshAt < 2000) return
+      lastEventRefreshAt = now
+      refresh()
     }
-    window.addEventListener('focus', onVisible)
-    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onWake)
+    document.addEventListener('visibilitychange', onWake)
 
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current)
-      window.removeEventListener('focus', onVisible)
-      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onWake)
+      document.removeEventListener('visibilitychange', onWake)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollIntervalMs])

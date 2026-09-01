@@ -1,7 +1,7 @@
 import Invoice from '@/models/Invoice'
 import Notification from '@/models/Notification'
 import { computeInvoiceTotals } from '@/lib/invoice-totals'
-import { diffDays, todayDateString } from './dates'
+import { diffDays, parseDateString, todayDateString } from './dates'
 import type { NotificationDTO, NotificationType } from './types'
 
 /*
@@ -135,7 +135,44 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
     )
     .lean()
 
-  const overdueIds = overdueInvoices.map((i) => i._id)
+  // Filter out rows we can act on safely:
+  //  - calendar-impossible dueDates (e.g. '2026-00-00' pass the $regex but
+  //    break date math) — cannot notify safely, never resolve their rows
+  //  - zero amount due: a 'partial' invoice where amountPaid covers the total
+  //    is not owed anything and must not alarm (step 3 resolves its old row)
+  const actionable: {
+    invoice: any
+    dueDate: string
+    daysOverdue: number
+    amountDue: number
+    currency: string
+    invoiceNumber: string
+    customerName: string
+  }[] = []
+
+  for (const invoice of overdueInvoices as any[]) {
+    const dueDate: string = invoice.invoice?.dueDate || ''
+    const total = computeAmountDue(invoice)
+    const paid = Number(invoice.amountPaid ?? invoice.financial?.amountPaid ?? 0) || 0
+    const amountDue = Math.max(0, total - paid)
+    if (!(amountDue > 0.005)) continue
+
+    const daysOverdue = diffDays(dueDate, today)
+    if (!parseDateString(dueDate) || !Number.isFinite(daysOverdue)) continue
+
+    actionable.push({
+      invoice,
+      dueDate,
+      daysOverdue,
+      amountDue,
+      currency: invoice.invoice?.currency || 'USD',
+      invoiceNumber: invoice.invoice?.number || '',
+      customerName: invoice.customer?.name || '',
+    })
+  }
+
+  const overdueIds = actionable.map((e) => e.invoice._id)
+  const overdueIdSet = new Set(overdueIds.map(String))
 
   // 2. Existing overdue rows for exactly this set.
   const existing =
@@ -147,16 +184,9 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
       : []
   const existingByInvoice = new Map(existing.map((n) => [String((n as any).invoiceId), n]))
 
-  for (const invoice of overdueInvoices as any[]) {
+  for (const entry of actionable) {
+    const { invoice, dueDate, daysOverdue, amountDue, currency, invoiceNumber, customerName } = entry
     const existingRow = existingByInvoice.get(String(invoice._id))
-    const dueDate: string = invoice.invoice?.dueDate || ''
-    const daysOverdue = diffDays(dueDate, today)
-    const invoiceNumber = invoice.invoice?.number || ''
-    const customerName = invoice.customer?.name || ''
-    const currency = invoice.invoice?.currency || 'USD'
-    const total = computeAmountDue(invoice)
-    const paid = Number(invoice.amountPaid ?? invoice.financial?.amountPaid ?? 0) || 0
-    const amountDue = Math.max(0, total - paid)
     const message = `Invoice ${invoiceNumber}${customerName ? ` for ${customerName}` : ''} is ${daysOverdue} day${
       daysOverdue === 1 ? '' : 's'
     } overdue (due ${dueDate}).`
@@ -191,11 +221,12 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
         }
       }
     } else if (
+      existingRow.resolvedAt ||
       now.getTime() - new Date(existingRow.lastNotifiedAt).getTime() >= RENOTIFY_INTERVAL_MS
     ) {
-      // Re-notify: the 3-day cadence elapsed since the last ping. Also
-      // re-opens resolved rows whose invoice became overdue again — same
-      // cadence, measured from lastNotifiedAt.
+      // Re-notify when the 3-day cadence has elapsed, or IMMEDIATELY when the
+      // row was resolved (paid) but the invoice became overdue again — the
+      // owner must not wait out the cadence on a genuine regression.
       try {
         const result = await Notification.updateOne(
           { _id: existingRow._id },
@@ -223,20 +254,47 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
     }
   }
 
-  // 3. Resolve rows that are no longer backed by an overdue invoice
-  //    (invoice paid or deleted outside the DELETE route) — regardless of
-  //    read state; an owner may have read the notification while the invoice
-  //    was still unpaid. $nin: [] matches everything — which is exactly
-  //    right when nothing is overdue.
-  const resolveResult = await Notification.updateMany(
-    {
-      type: 'invoice_overdue',
-      resolvedAt: null,
-      invoiceId: { $nin: overdueIds },
-    },
-    { $set: { read: true, readAt: now, resolvedAt: now } }
+  // 3. Rows no longer backed by an overdue invoice — regardless of read
+  //    state (an owner may have read it while the invoice was unpaid):
+  //    - invoice gone (deleted outside the DELETE route, or racing an
+  //      in-flight scan's create) → hard-delete the orphan
+  //    - invoice still exists (paid, or amountDue hit 0) → resolve
+  const pendingRows = await Notification.find({
+    type: 'invoice_overdue',
+    resolvedAt: null,
+  })
+    .select('_id invoiceId')
+    .lean()
+
+  const pendingInvoiceIds = Array.from(
+    new Set(pendingRows.map((r: any) => String(r.invoiceId)))
   )
-  resolved = resolveResult.modifiedCount || 0
+  const stillExistingInvoices = pendingInvoiceIds.length
+    ? await Invoice.find({ _id: { $in: pendingInvoiceIds } }).select('_id').lean()
+    : []
+  const existingInvoiceSet = new Set(stillExistingInvoices.map((i: any) => String(i._id)))
+
+  const orphanInvoiceIds: string[] = []
+  const resolvableRowIds: any[] = []
+  for (const row of pendingRows as any[]) {
+    const invoiceKey = String(row.invoiceId)
+    if (!existingInvoiceSet.has(invoiceKey)) {
+      orphanInvoiceIds.push(invoiceKey)
+    } else if (!overdueIdSet.has(invoiceKey)) {
+      resolvableRowIds.push(row._id)
+    }
+  }
+
+  if (orphanInvoiceIds.length > 0) {
+    await Notification.deleteMany({ invoiceId: { $in: orphanInvoiceIds } })
+  }
+  if (resolvableRowIds.length > 0) {
+    const resolveResult = await Notification.updateMany(
+      { _id: { $in: resolvableRowIds } },
+      { $set: { read: true, readAt: now, resolvedAt: now } }
+    )
+    resolved = resolveResult.modifiedCount || 0
+  }
 
   try {
     await pruneNotifications()

@@ -18,8 +18,12 @@ export const todayDateString = (): string => formatDateString(new Date())
 export const isIsoDayString = (value?: string | null): value is string =>
   typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
-/** Whole days between two YYYY-MM-DD strings (b - a). */
-export const diffDays = (a: string, b: string): number =>
-  Math.round(
-    (parseDateString(b)!.getTime() - parseDateString(a)!.getTime()) / (24 * 60 * 60 * 1000)
-  )
+/** Whole days between two YYYY-MM-DD strings (b - a). Never throws:
+ *  calendar-impossible strings (e.g. '2026-00-00' pass a regex but not Date
+ *  parsing) yield 0 — callers validate before using the result. */
+export const diffDays = (a: string, b: string): number => {
+  const from = parseDateString(a)
+  const to = parseDateString(b)
+  if (!from || !to) return 0
+  return Math.round((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
+}

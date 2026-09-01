@@ -102,8 +102,17 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of clientList) {
         if ('focus' in client) {
           await client.focus()
-          if ('navigate' in client) await client.navigate(target)
-          return
+          // WindowClient.navigate is not implemented in Firefox — fall
+          // through to a new window rather than just focusing.
+          if ('navigate' in client) {
+            try {
+              await client.navigate(target)
+              return
+            } catch (err) {
+              break
+            }
+          }
+          break
         }
       }
       await self.clients.openWindow(target)
