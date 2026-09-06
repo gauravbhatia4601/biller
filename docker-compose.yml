@@ -67,6 +67,9 @@ services:
       - AUTH_WEBAUTHN_RP_NAME=${AUTH_WEBAUTHN_RP_NAME:-Biller}
       - AUTH_DEBUG=${AUTH_DEBUG:-false}
       - RECURRING_CRON_SECRET=${RECURRING_CRON_SECRET}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+      - VAPID_SUBJECT=${VAPID_SUBJECT:-mailto:info@technioz.com}
     networks:
       - coolify
     volumes:

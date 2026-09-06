@@ -9,7 +9,7 @@
  *  - Everything else passes through untouched.
  */
 
-const CACHE_NAME = 'biller-v2'
+const CACHE_NAME = 'biller-v3'
 const OFFLINE_URL = '/offline'
 
 self.addEventListener('install', (event) => {
@@ -89,8 +89,32 @@ self.addEventListener('fetch', (event) => {
 })
 
 /*
- * Local (non-push) notifications raised via registration.showNotification
- * land here — clicking one focuses the app and navigates to the invoice.
+ * Web push: server-sent notifications arrive here even when the PWA is
+ * closed. The payload is JSON {title, body, url, tag} from the notification
+ * core service.
+ */
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch (err) {
+    data = { title: 'Biller', body: event.data ? event.data.text() : '' }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Biller', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag,
+      data: { url: data.url || '/dashboard' },
+    })
+  )
+})
+
+/*
+ * Clicked notifications (push and local alike) land here — clicking one
+ * focuses the app and navigates to the invoice.
  */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()

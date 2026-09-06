@@ -165,8 +165,6 @@ export default function DashboardPage() {
                                 {invoice.pdfPath && (
                                   <a
                                     href={`/api/invoices/${invoice._id}/pdf`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
                                     className="shrink-0 p-1 text-xs text-green-600 hover:text-green-700"
                                     title="View PDF"
                                   >

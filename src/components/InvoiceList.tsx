@@ -189,8 +189,6 @@ export default function InvoiceList() {
                       {invoice.pdfPath && (
                         <a
                           href={`/api/invoices/${invoice._id}/pdf`}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           title="View PDF"
                         >
                           <Button size="xs" color="light" className="p-2.5 md:p-1.5 md:px-3">

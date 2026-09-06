@@ -2,6 +2,7 @@ import Invoice from '@/models/Invoice'
 import Notification from '@/models/Notification'
 import { computeInvoiceTotals } from '@/lib/invoice-totals'
 import { diffDays, parseDateString, todayDateString } from './dates'
+import { sendPushToAll } from './push'
 import type { NotificationDTO, NotificationType } from './types'
 
 /*
@@ -75,6 +76,16 @@ export async function notifyInvoiceGenerated(invoice: {
       },
       { upsert: true, new: true }
     )
+
+    // Fire-and-forget web push — arrives even when the PWA is closed.
+    void sendPushToAll({
+      title: 'New invoice generated',
+      body: `Invoice ${invoiceNumber}${
+        customerName ? ` for ${customerName}` : ''
+      } was generated automatically.`,
+      url: `/invoices/${String(invoice._id)}`,
+      tag: `generated-${String(invoice._id)}`,
+    })
   } catch (error: any) {
     // E11000 from a racing duplicate upsert is expected and fine.
     if (error?.code !== 11000) {
@@ -211,6 +222,12 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
           resolvedAt: null,
         })
         created += 1
+        void sendPushToAll({
+          title: 'Invoice overdue',
+          body: message,
+          url: `/invoices/${String(invoice._id)}`,
+          tag: `overdue-${String(invoice._id)}`,
+        })
       } catch (error: any) {
         // Isolate failures: one bad row must not abort the rest of the scan.
         if (error?.code !== 11000) {
@@ -244,7 +261,15 @@ async function runOverdueScanInternal(): Promise<OverdueScanResult> {
             $inc: { notifyCount: 1 },
           }
         )
-        if (result.modifiedCount > 0) renotified += 1
+        if (result.modifiedCount > 0) {
+          renotified += 1
+          void sendPushToAll({
+            title: 'Invoice overdue',
+            body: message,
+            url: `/invoices/${String(invoice._id)}`,
+            tag: `overdue-${String(invoice._id)}`,
+          })
+        }
       } catch (error: any) {
         console.error(
           `Overdue re-notify failed for invoice ${invoice._id}:`,

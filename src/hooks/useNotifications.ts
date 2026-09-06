@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { isNotificationSupported, showLocalNotification } from '@/lib/notifications/client'
+import { isNotificationSupported, showLocalNotification, subscribeToPush } from '@/lib/notifications/client'
 import type { NotificationDTO, NotificationListResponse } from '@/lib/notifications/types'
 
 const LAST_SEEN_KEY = 'biller.notif.lastSeenPingAt'
@@ -189,6 +189,9 @@ export function useNotifications(options?: { pollIntervalMs?: number }) {
           }
         })
         setPermission(result)
+        // Granted for the first time → register this device for web push so
+        // toasts arrive even when the PWA is closed.
+        if (result === 'granted') void subscribeToPush()
         return result
       } catch {
         return Notification.permission
